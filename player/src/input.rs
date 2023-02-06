@@ -6,7 +6,8 @@ pub(crate) struct InputPlugin;
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(ControlScheme::default())
-            .add_plugin(InputManagerPlugin::<CharacterAction>::default())
+            .add_plugin(InputManagerPlugin::<PlayerMoveAction>::default())
+            .add_plugin(InputManagerPlugin::<PlayerFightAction>::default())
             .add_plugin(InputManagerPlugin::<CameraAction>::default());
     }
 }
@@ -20,7 +21,7 @@ pub struct Camera3dWithInputBundle {
 }
 
 #[derive(Actionlike, Debug, Clone, Copy, PartialEq, Eq)]
-pub enum CharacterAction {
+pub enum PlayerMoveAction {
     Forward,
     Backward,
     Left,
@@ -28,6 +29,11 @@ pub enum CharacterAction {
     Jump,
     Crouch,
     Sprint,
+    Yaw,
+}
+
+#[derive(Actionlike, Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PlayerFightAction {
     Primary,
     Secondary,
     Hotbar1,
@@ -40,7 +46,7 @@ pub enum CharacterAction {
     Hotbar8,
     Hotbar9,
     Hotbar0,
-    Rotate,
+    Pitch,
 }
 
 #[derive(Actionlike, Debug, Clone, Copy, PartialEq, Eq)]
@@ -53,34 +59,39 @@ pub enum CameraAction {
 
 #[derive(Resource, Debug)]
 pub struct ControlScheme {
-    pub character_input: InputMap<CharacterAction>,
+    pub move_input: InputMap<PlayerMoveAction>,
+    pub fight_input: InputMap<PlayerFightAction>,
     pub camera_input: InputMap<CameraAction>,
 }
 
 impl Default for ControlScheme {
     fn default() -> Self {
-        let mut character_input = InputMap::default();
-        character_input
-            .insert(KeyCode::W, CharacterAction::Forward)
-            .insert(KeyCode::S, CharacterAction::Backward)
-            .insert(KeyCode::A, CharacterAction::Left)
-            .insert(KeyCode::D, CharacterAction::Right)
-            .insert(KeyCode::Space, CharacterAction::Jump)
-            .insert(KeyCode::LControl, CharacterAction::Crouch)
-            .insert(KeyCode::LShift, CharacterAction::Sprint)
-            .insert(MouseButton::Left, CharacterAction::Primary)
-            .insert(MouseButton::Right, CharacterAction::Secondary)
-            .insert(KeyCode::Key1, CharacterAction::Hotbar1)
-            .insert(KeyCode::Key2, CharacterAction::Hotbar2)
-            .insert(KeyCode::Key3, CharacterAction::Hotbar3)
-            .insert(KeyCode::Key4, CharacterAction::Hotbar4)
-            .insert(KeyCode::Key5, CharacterAction::Hotbar5)
-            .insert(KeyCode::Key6, CharacterAction::Hotbar6)
-            .insert(KeyCode::Key7, CharacterAction::Hotbar7)
-            .insert(KeyCode::Key8, CharacterAction::Hotbar8)
-            .insert(KeyCode::Key9, CharacterAction::Hotbar9)
-            .insert(KeyCode::Key0, CharacterAction::Hotbar0)
-            .insert(DualAxis::mouse_motion(), CharacterAction::Rotate);
+        let mut move_input = InputMap::default();
+        move_input
+            .insert(KeyCode::W, PlayerMoveAction::Forward)
+            .insert(KeyCode::S, PlayerMoveAction::Backward)
+            .insert(KeyCode::A, PlayerMoveAction::Left)
+            .insert(KeyCode::D, PlayerMoveAction::Right)
+            .insert(KeyCode::Space, PlayerMoveAction::Jump)
+            .insert(KeyCode::LControl, PlayerMoveAction::Crouch)
+            .insert(KeyCode::LShift, PlayerMoveAction::Sprint)
+            .insert(SingleAxis::mouse_motion_x(), PlayerMoveAction::Yaw);
+
+        let mut fight_input = InputMap::default();
+        fight_input
+            .insert(MouseButton::Left, PlayerFightAction::Primary)
+            .insert(MouseButton::Right, PlayerFightAction::Secondary)
+            .insert(KeyCode::Key1, PlayerFightAction::Hotbar1)
+            .insert(KeyCode::Key2, PlayerFightAction::Hotbar2)
+            .insert(KeyCode::Key3, PlayerFightAction::Hotbar3)
+            .insert(KeyCode::Key4, PlayerFightAction::Hotbar4)
+            .insert(KeyCode::Key5, PlayerFightAction::Hotbar5)
+            .insert(KeyCode::Key6, PlayerFightAction::Hotbar6)
+            .insert(KeyCode::Key7, PlayerFightAction::Hotbar7)
+            .insert(KeyCode::Key8, PlayerFightAction::Hotbar8)
+            .insert(KeyCode::Key9, PlayerFightAction::Hotbar9)
+            .insert(KeyCode::Key0, PlayerFightAction::Hotbar0)
+            .insert(SingleAxis::mouse_motion_y(), PlayerFightAction::Pitch);
 
         let mut camera_input = InputMap::default();
         camera_input
@@ -89,7 +100,8 @@ impl Default for ControlScheme {
             .insert(KeyCode::H, CameraAction::SwitchShoulder);
 
         Self {
-            character_input,
+            move_input,
+            fight_input,
             camera_input,
         }
     }

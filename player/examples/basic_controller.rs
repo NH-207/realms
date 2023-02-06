@@ -2,8 +2,10 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use leafwing_input_manager::InputManagerBundle;
 use player::{
-    input::{Camera3dWithInputBundle, CameraAction, CharacterAction, ControlScheme},
-    PlayerPlugin,
+    input::{
+        Camera3dWithInputBundle, CameraAction, ControlScheme, PlayerFightAction, PlayerMoveAction,
+    },
+    PlayerAim, PlayerBase, PlayerPlugin,
 };
 
 fn main() {
@@ -40,20 +42,33 @@ fn setup(
             ..default()
         })
         .insert(RigidBody::KinematicPositionBased)
-        .insert(Collider::ball(0.5))
+        .insert(Collider::capsule_y(0.5, 0.5))
         .insert(KinematicCharacterController::default())
-        .insert(InputManagerBundle::<CharacterAction> {
-            input_map: control_scheme.character_input.clone(),
+        .insert(InputManagerBundle::<PlayerMoveAction> {
+            input_map: control_scheme.move_input.clone(),
             ..default()
         })
+        .insert(PlayerBase)
         // Add Camera
         .with_children(|commands| {
-            commands.spawn(Camera3dWithInputBundle {
-                camera_3d: Camera3dBundle::default(),
-                input: InputManagerBundle::<CameraAction> {
-                    input_map: control_scheme.camera_input.clone(),
+            commands
+                .spawn(PlayerAim)
+                .insert(TransformBundle {
+                    local: Transform::from_xyz(0.0, 1.0, -0.5),
                     ..default()
-                },
-            });
+                })
+                .insert(InputManagerBundle::<PlayerFightAction> {
+                    input_map: control_scheme.fight_input.clone(),
+                    ..default()
+                })
+                .with_children(|commands| {
+                    commands.spawn(Camera3dWithInputBundle {
+                        camera_3d: Camera3dBundle::default(),
+                        input: InputManagerBundle::<CameraAction> {
+                            input_map: control_scheme.camera_input.clone(),
+                            ..default()
+                        },
+                    });
+                });
         });
 }
