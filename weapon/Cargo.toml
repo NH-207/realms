@@ -1,5 +1,5 @@
 [package]
-name = "player"
+name = "weapon"
 version.workspace = true
 edition.workspace = true
 
@@ -7,5 +7,3 @@ edition.workspace = true
 
 [dependencies]
 bevy = { workspace = true }
-bevy_rapier3d = { workspace = true }
-leafwing-input-manager = { workspace = true }

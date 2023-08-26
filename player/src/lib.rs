@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_rapier3d::prelude::{KinematicCharacterController, KinematicCharacterControllerOutput};
 use input::{PlayerFightAction, PlayerMoveAction};
 use leafwing_input_manager::prelude::ActionState;
@@ -120,7 +120,7 @@ fn player_movement(
 }
 
 fn player_aim(
-    windows: Res<Windows>,
+    window: Query<&Window, With<PrimaryWindow>>,
     mut pitch_query: Query<
         (&ActionState<PlayerFightAction>, &mut Transform),
         (With<PlayerAim>, Without<PlayerBase>),
@@ -146,13 +146,13 @@ fn player_aim(
     );
 
     if rotation.length_squared() > 0.0 {
-        let window = get_primary_window_size(&windows);
+        let Ok(window) = window.get_single() else { return; };
 
-        let delta_x = rotation.x / window.x * std::f32::consts::PI * 2.0;
+        let delta_x = rotation.x / window.width() * std::f32::consts::PI * 2.0;
         let yaw = Quat::from_rotation_y(-delta_x);
         yaw_transform.rotation = yaw * yaw_transform.rotation; // rotate around global y axis
 
-        let delta_y = rotation.y / window.y * std::f32::consts::PI;
+        let delta_y = rotation.y / window.height() * std::f32::consts::PI;
         let pitch = Quat::from_rotation_x(-delta_y);
         pitch_transform.rotation = pitch_transform.rotation * pitch; // rotate around local x axis
     }
@@ -166,10 +166,4 @@ fn add_translation(mut input: Mut<KinematicCharacterController>, new_translation
     };
 
     input.translation = Some(old_translation + new_translation);
-}
-
-fn get_primary_window_size(windows: &Res<Windows>) -> Vec2 {
-    let window = windows.get_primary().unwrap();
-    let window = Vec2::new(window.width() as f32, window.height() as f32);
-    window
 }
